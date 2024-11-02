@@ -1,0 +1,128 @@
+<!-- templates/analysis.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">Student Performance Analysis</h1>
+        
+        <!-- Overall Statistics -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Overall Statistics</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="text-sm text-gray-600">Average SGPA</div>
+                    <div class="text-lg font-semibold">{{ analysis.statistics.average_sgpa }}</div>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="text-sm text-gray-600">Median SGPA</div>
+                    <div class="text-lg font-semibold">{{ analysis.statistics.median_sgpa }}</div>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="text-sm text-gray-600">SGPA Std Dev</div>
+                    <div class="text-lg font-semibold">{{ analysis.statistics.std_sgpa }}</div>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="text-sm text-gray-600">Highest SGPA</div>
+                    <div class="text-lg font-semibold">{{ analysis.statistics.top_sgpa }}</div>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="text-sm text-gray-600">Lowest SGPA</div>
+                    <div class="text-lg font-semibold">{{ analysis.statistics.bottom_sgpa }}</div>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="text-sm text-gray-600">Overall Pass Rate</div>
+                    <div class="text-lg font-semibold">{{ analysis.statistics.total_pass_rate }}%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualization Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Visual Analysis</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">SGPA Distribution</h3>
+                    <img src="data:image/png;base64,{{ analysis.plots.sgpa_dist }}" alt="SGPA Distribution" class="w-full">
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Subject-wise Mark Distribution</h3>
+                    <img src="data:image/png;base64,{{ analysis.plots.subject_box }}" alt="Subject Distribution" class="w-full">
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Pass Rates Comparison</h3>
+                    <img src="data:image/png;base64,{{ analysis.plots.pass_rates }}" alt="Pass Rates" class="w-full">
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Grade Distribution Heatmap</h3>
+                    <img src="data:image/png;base64,{{ analysis.plots.grade_dist }}" alt="Grade Distribution" class="w-full">
+                </div>
+            </div>
+        </div>
+
+        <!-- Subject-wise Analysis -->
+        {% for subject in analysis.subjects %}
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4">{{ subject.name }} ({{ subject.credits }} credits)</h3>
+            
+            <!-- Subject Statistics -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gray-50 p-3 rounded">
+                    <div class="text-sm text-gray-600">Average</div>
+                    <div class="text-lg font-semibold">{{ subject.average }}%</div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded">
+                    <div class="text-sm text-gray-600">Median</div>
+                    <div class="text-lg font-semibold">{{ subject.median }}%</div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded">
+                    <div class="text-sm text-gray-600">Std Deviation</div>
+                    <div class="text-lg font-semibold">{{ subject.std_dev }}</div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded">
+                    <div class="text-sm text-gray-600">Pass Rate</div>
+                    <div class="text-lg font-semibold">{{ subject.pass_rate }}%</div>
+                </div>
+            </div>
+            
+            <!-- Grade Distribution -->
+            <div class="mb-6">
+                <h4 class="font-semibold mb-2">Grade Distribution</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+                    {% for grade, count in subject.grade_distribution.items() %}
+                    <div class="bg-blue-50 p-2 rounded text-center">
+                        <div class="text-sm font-medium">{{ grade }}</div>
+                        <div class="text-lg font-semibold">{{ count }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Top Performers -->
+            <h4 class="font-semibold mb-2">Top Performers</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                {% for performer in subject.top_performers %}
+                <div class="bg-green-50 p-3 rounded">
+                    <div class="font-medium">{{ loop.index }}. {{ performer.name }}</div>
+                    <div class="text-sm text-gray-600">USN: {{ performer.usn }}</div>
+                    <div class="text-green-600 font-semibold">Marks: {{ performer.marks }}%</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Back Button -->
+        <div class="mt-8 text-center">
+            <a href="{{ url_for('upload_file') }}" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+                Upload Another File
+            </a>
+        </div>
+    </div>
+</body>
+</html>
