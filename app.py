@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, flash, redirect, url_for
 import os
 from werkzeug.utils import secure_filename
 import pandas as pd
-from utils import allowed_file, extract_subject_credits, calculate_sgpa, get_subject_analysis
+from analysis import allowed_file, extract_subject_credits, calculate_sgpa, get_subject_analysis
 
 app = Flask(__name__)
 app.secret_key = "anonymous"

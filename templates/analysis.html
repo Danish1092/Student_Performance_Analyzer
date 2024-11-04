@@ -6,12 +6,12 @@
     <title>Student Performance Analysis</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        .subject-data.hidden {
-            display: none;
-        }
-
         .selected {
             background-color: #e2f3ff; /* Light blue background for selected subject */
+        }
+
+        .hidden {
+            display: none; /* Hide the top performers' table */
         }
     </style>
 </head>
@@ -26,7 +26,6 @@
                 {% for performer in analysis.top_performers.overall %}
                 <div class="bg-green-50 p-3 rounded">
                     <div class="font-medium">{{ loop.index }}. {{ performer.name }}</div>
-                    <div class="text-sm text-gray-600">USN: {{ performer.usn }}</div>
                     <div class="text-green-600 font-semibold">SGPA: {{ performer.sgpa }}</div>
                 </div>
                 {% endfor %}
@@ -36,29 +35,55 @@
         <!-- Subject-wise Top Performers -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
             <h2 class="text-2xl font-semibold mb-4">Subject-wise Top Performers</h2>
-            <table class="w-full">
-                <tbody>
-                    {% for subject in analysis.subjects %}
-                    <tr>
-                        <td class="w-1/4 px-4 py-2 font-medium cursor-pointer hover:bg-gray-100" 
-                            onclick="toggleSubjectPerformers('{{ subject.name }}')">
-                            {{ subject.name }} ({{ subject.credits }})
-                        </td>
-                        <td class="w-3/4 px-4 py-2">
-                            <div id="subject-performers-{{ subject.name }}" class="subject-data hidden">
-                                {% for performer in subject.top_performers %}
-                                <div class="bg-green-50 p-3 rounded mb-2">
-                                    <div class="font-medium">{{ loop.index }}. {{ performer.name }}</div>
-                                    <div class="text-sm text-gray-600">USN: {{ performer.usn }}</div>
-                                    <div class="text-green-600 font-semibold">Marks: {{ performer.marks }}%</div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold">Subjects</h3>
+                    <table class="w-full">
+                        <tbody>
+                            {% for subject in analysis.subjects %}
+                            <tr>
+                                <td class="w-1/4 px-4 py-2 font-medium cursor-pointer hover:bg-gray-100" 
+                                    onclick="showPerformers('{{ subject.name }}')">
+                                    {{ subject.name }} ({{ subject.credits }})
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold">Top Performers</h3>
+                    <table class="w-full">
+                        <tbody id="performers-table">
+                            {% for subject in analysis.subjects %}
+                            <tr id="performers-{{ subject.name }}" class="hidden">
+                                <td colspan="2">
+                                    <table class="w-full">
+                                        <thead>
+                                            <tr>
+                                                <th class="px-4 py-2 font-medium">Name</th>
+                                                <th class="px-4 py-2 font-medium">USN</th>
+                                                <th class="px-4 py-2 font-medium">Marks (%)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for performer in subject.top_performers %}
+                                            <tr>
+                                                <td class="bg-green-50 p-3">{{ performer.name }}</td>
+                                                <td class="bg-green-50 p-3">{{ performer.usn }}</td>
+                                                <td class="bg-green-50 p-3">{{ performer.marks }}%</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         
         <!-- Back Button -->
@@ -72,20 +97,20 @@
     <script>
         let currentSubject = null;
 
-        function toggleSubjectPerformers(subjectName) {
+        function showPerformers(subjectName) {
             // Hide the current subject data if there is one
             if (currentSubject && currentSubject !== subjectName) {
-                document.getElementById(`subject-performers-${currentSubject}`).classList.add('hidden');
-                document.querySelector(`[onclick="toggleSubjectPerformers('${currentSubject}')"]`).classList.remove('selected');
+                document.getElementById(`performers-${currentSubject}`).classList.add('hidden');
+                document.querySelector(`[onclick="showPerformers('${currentSubject}')"]`).classList.remove('selected');
             }
 
             // Toggle visibility of the selected subject's data
-            const subjectDiv = document.getElementById(`subject-performers-${subjectName}`);
-            subjectDiv.classList.toggle('hidden');
+            const performersRow = document.getElementById(`performers-${subjectName}`);
+            performersRow.classList.toggle('hidden');
 
             // Highlight or unhighlight the selected subject
-            const subjectTd = document.querySelector(`[onclick="toggleSubjectPerformers('${subjectName}')"]`);
-            if (subjectDiv.classList.contains('hidden')) {
+            const subjectTd = document.querySelector(`[onclick="showPerformers('${subjectName}')"]`);
+            if (performersRow.classList.contains('hidden')) {
                 subjectTd.classList.remove('selected');
                 currentSubject = null;
             } else {
