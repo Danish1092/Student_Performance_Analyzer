@@ -12,17 +12,75 @@ def extract_subject_credits(column_name):
         return subject, credits
     return None, None
 
-def validate_excel_structure(df):
-    if 'Student Name' not in df.columns or 'USN' not in df.columns:
-        return False, "Missing required columns: Student Name and USN"
+def calculate_sgpa(df):
+    # Define a function to calculate SGPA based on the DataFrame structure
+    # Assuming columns are named like "Python(3)", "java(2)", etc.
+
+    # Define credit mapping for subjects if applicable
+    credits = {'Python(3)': 3, 'java(2)': 2, 'ada(3)': 3, 'Dbms(3)': 3, 'Computer network(2)': 2}
     
-    subject_columns = [col for col in df.columns if extract_subject_credits(col)[0] is not None]
+    def get_grade_point(marks):
+        if marks >= 90:
+            return 10
+        elif marks >= 80:
+            return 9
+        elif marks >= 70:
+            return 8
+        elif marks >= 60:
+            return 7
+        elif marks >= 50:
+            return 6
+        elif marks >= 40:
+            return 5
+        else:
+            return 0  # Fail
     
-    if len(subject_columns) < 5:
-        return False, "Excel sheet must contain at least 5 subject columns with credits in brackets"
+    # Calculate SGPA for each student
+    sga_values = []
     
-    for col in subject_columns:
-        if not pd.to_numeric(df[col], errors='coerce').between(0, 100).all():
-            return False, f"Invalid marks found in column {col}. Marks should be between 0 and 100"
+    for index, row in df.iterrows():
+        total_credits = sum(credits[subject] for subject in credits if subject in df.columns)
+        total_grade_points = sum(get_grade_point(row[subject]) * credits[subject] for subject in credits if subject in df.columns)
+        sgpa = round(total_grade_points / total_credits, 2) if total_credits > 0 else 0
+        sga_values.append(sgpa)
     
-    return True, "Validation successful"
+    df['SGPA'] = sga_values
+    return df
+
+def get_subject_analysis(df):
+    analysis = {
+        'total_students': len(df),
+        'subjects': [],
+        'top_performers': {},
+    }
+    
+    # Overall Top Performers
+    top_sgpa_performers = df.nlargest(5, 'SGPA')[['Student Name', 'USN', 'SGPA']]
+    analysis['top_performers']['overall'] = [
+        {
+            'name': row['Student Name'],
+            'usn': row['USN'],
+            'sgpa': row['SGPA']
+        } for _, row in top_sgpa_performers.iterrows()
+    ]
+    
+    for col in df.columns:
+        subject, credits = extract_subject_credits(col)
+        if subject and credits:
+            # Get top 5 performers for this subject
+            top_performers = df.nlargest(5, col)[['Student Name', 'USN', col]]
+            
+            subject_stats = {
+                'name': subject,
+                'credits': credits,
+                'top_performers': [
+                    {
+                        'name': row['Student Name'],
+                        'usn': row['USN'],
+                        'marks': row[col]
+                    } for _, row in top_performers.iterrows()
+                ],
+            }
+            analysis['subjects'].append(subject_stats)
+    
+    return analysis

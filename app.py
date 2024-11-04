@@ -2,11 +2,10 @@ from flask import Flask, render_template, request, flash, redirect, url_for
 import os
 from werkzeug.utils import secure_filename
 import pandas as pd
-from utils import allowed_file, extract_subject_credits, validate_excel_structure
-from analysis import calculate_sgpa, get_subject_analysis  # Added get_subject_analysis import
+from utils import allowed_file, extract_subject_credits, calculate_sgpa, get_subject_analysis
 
 app = Flask(__name__)
-app.secret_key = "anonumus"
+app.secret_key = "anonymous"
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -30,14 +29,9 @@ def upload_file():
             
             try:
                 df = pd.read_excel(filepath)
-                is_valid, message = validate_excel_structure(df)
-                if not is_valid:
-                    flash(f'Invalid Excel structure: {message}')
-                    return redirect(request.url)
-                
                 df = calculate_sgpa(df)
-                df.to_excel(filepath, index=False)  # Save with updated SGPA
-
+                df.to_excel(filepath, index=False)  # Save the updated Excel file
+                
                 return redirect(url_for('analyze_data', filename=filename))
             
             except Exception as e:
